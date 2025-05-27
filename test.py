@@ -1,6 +1,11 @@
 import streamlit as st
 from PIL import Image
 import google.generativeai as genai
+import os
+
+os.system("pip install google-generativeai")
+
+
 
 st.set_page_config(page_title="LLM Prompt Window", layout="centered")
 
