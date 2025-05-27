@@ -1,11 +1,6 @@
 import streamlit as st
 from PIL import Image
 import google.generativeai as genai
-import os
-
-os.system("pip install google-generativeai")
-
-
 
 st.set_page_config(page_title="LLM Prompt Window", layout="centered")
 
@@ -59,13 +54,32 @@ st.markdown('<div class="or-divider">OR</div>', unsafe_allow_html=True)
 
 case_text = st.text_area("Paste case text here", height=200, max_chars=None)
 
+initial_prompt=""
+try:
+    if st.query_params["qno"] == "1":
+        initial_prompt = "in the image or the code snippet, your job is to identify if there are any mistakes and must be ablle to score it based on, for each error, reduce 0.5 points.score it out of 10.only and only return the final score alone.only final score as integer has to be outputted"
+    elif st.query_params["qno"] == "2":
+        initial_prompt = "in the image or code snippet, your job is to identify if there are any mistakes and must be ablle to score it based on, for each error, reduce 5 points.score it out of 100.only and only return the final score alone.only final score as integer has to be outputted"        
+    else:
+        initial_prompt = ""
+except:
+    initial_prompt = ""
+
+
 if st.button("Generate Brief"):
-    if uploaded_file is not None and case_text.strip() != "":
-        img = Image.open(uploaded_file)
+    if not uploaded_file and not case_text:
+        st.warning("Please upload a file or enter case text.")
+    else:
         genai.configure(api_key="AIzaSyA9b9YZBLkxBOhRd1wDahGYbZkUI4YU9Qk")
         model = genai.GenerativeModel('gemini-2.0-flash')
-        response = model.generate_content([img, case_text])
+        inputs = []
+        if uploaded_file:
+            img = Image.open(uploaded_file)
+            inputs.append(img)
+        if initial_prompt:
+            inputs.append(initial_prompt)
+        if case_text:
+            inputs.append(case_text)
+        response = model.generate_content(inputs)
         st.markdown("**Generated Brief:**")
         st.write(response.text)
-    else:
-        st.warning("Please upload a file and enter case text.")
