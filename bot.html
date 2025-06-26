@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Company Chatbot</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+    }
+
+    header {
+      background: #e53935;
+      color: white;
+      padding: 30px;
+      text-align: center;
+      font-size: 36px;
+    }
+
+    #popupForm {
+      display: none; /* Initially hidden */
+      position: fixed;
+      top: 25%;
+      left: 35%;
+      width: 30%;
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      z-index: 1001;
+      transform: translate(-50%, -50%); /* Centering adjustment */
+      left: 50%; /* Adjusted for centering */
+      top: 50%; /* Adjusted for centering */
+    }
+
+    #popupForm h3 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    #popupForm input,
+    #popupForm textarea {
+      width: calc(100% - 20px); /* Adjusting for padding */
+      margin-bottom: 15px;
+      padding: 10px;
+      font-size: 14px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+
+    #popupForm textarea {
+      resize: vertical; /* Allow vertical resizing */
+      min-height: 80px;
+    }
+
+    #popupForm button {
+      background-color: #8B0A0A;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    #popupForm button:hover {
+      background-color: #00327a;
+    }
+
+    .close-button {
+      float: right;
+      background: none;
+      border: none;
+      font-size: 24px; /* Larger for better clickability */
+      cursor: pointer;
+      color: #aaa;
+      transition: color 0.2s ease;
+    }
+
+    .close-button:hover {
+      color: #555;
+    }
+
+    .test-para {
+      white-space: pre-wrap;
+      background: #fff;
+      padding: 15px;
+      margin: 20px;
+      border: 1px solid #ccc;
+      min-height: 150px;
+      font-size: 14px;
+      overflow-y: auto;
+      max-height: 300px;
+      border-radius: 8px; /* Slightly rounded corners */
+    }
+
+    /* Styles for the Dialogflow Messenger iframe to ensure it's visible */
+    df-messenger {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      z-index: 1000;
+      --df-messenger-button-titlebar-color: #8B0A0A; /* Matches your brand color */
+      --df-messenger-chat-background-color: #f0f2f5;
+      --df-messenger-font-color: #333;
+    }
+  </style>
+</head>
+<body>
+
+  <header>Expeed</header>
+
+  <p class="test-para"></p>
+
+  <div id="popupForm">
+    <button onclick="closeForm()" class="close-button">&times;</button>
+    <h3>Schedule a Consultation</h3>
+    <input type="email" id="email" placeholder="Your Email" required />
+    <input type="text" id="phone" placeholder="Your Phone Number" required />
+    <textarea id="problem" placeholder="Describe your issue" required></textarea>
+    <button onclick="submitForm()">Submit</button>
+  </div>
+
+  <df-messenger
+    intent="WELCOME"
+    chat-title="Chatbot"
+    agent-id="4e1b547f-c7b3-4b78-858f-110848e34576"
+    language-code="en"
+    class="df-messenger"
+  ></df-messenger>
+
+  <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
+
+  <script>
+  function submitForm() {
+    const email = document.getElementById("email").value;
+    const phone = document.getElementById("phone").value;
+    const problem = document.getElementById("problem").value;
+
+    if (!email || !phone || !problem) {
+      alert("Please fill in all fields before submitting.");
+      return;
+    }
+
+    alert("Form submitted!\n\nEmail: " + email + "\nPhone: " + phone + "\nProblem: " + problem);
+    document.getElementById("popupForm").style.display = "none";
+  }
+
+  function closeForm() {
+    document.getElementById("popupForm").style.display = "none";
+  }
+
+  document.addEventListener('dialogflow-response', function(event) {
+    const response = event.detail;
+
+    // Inject <style> blocks from Dialogflow richContent
+    if (response.richContent) {
+      response.richContent.forEach(group => {
+        group.forEach(item => {
+          if (item.type === 'custom' && item.text && item.text.startsWith('<style>')) {
+            const styleTag = document.createElement('style');
+            styleTag.innerHTML = item.text.replace('<style>', '').replace('</style>', '');
+            document.head.appendChild(styleTag);
+          }
+        });
+      });
+    }
+
+    // Optionally handle text response for debug or logs
+    if (response.fulfillmentMessages) {
+      response.fulfillmentMessages.forEach(msg => {
+        if (msg.payload?.custom_event === "bot_message" && msg.payload.text) {
+          const para = document.querySelector('.test-para');
+          para.textContent += msg.payload.text + "\n";
+          para.scrollTop = para.scrollHeight;
+        }
+      });
+    }
+  });
+</script>
+
+</body>
+</html>
